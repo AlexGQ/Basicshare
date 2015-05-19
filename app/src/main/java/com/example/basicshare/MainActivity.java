@@ -49,7 +49,11 @@ public class MainActivity extends Activity {
         imageView.setImageBitmap(bm);
         imageView.setAdjustViewBounds(true);
 
-        textView.setText("Name");
+        //textView.setText("Name");
+        textView.setFocusable(true);
+        textView.setEnabled(true);
+        textView.setClickable(true);
+
 
         //ImageView ie = ((ImageView)holder.findViewById(R.id.im_expand));
         shareButton.setOnClickListener(new View.OnClickListener() {
@@ -58,7 +62,14 @@ public class MainActivity extends Activity {
                 Contact contact = new Contact();
                 contact.setImageID(imageID);
                 contact.setName(textView.getText().toString());
+                contact.setOwnerID(1);
+                contact.setID(1);
+                contact.setStreet("");
+                contact.setPlace("");
+                contact.setPhoneNumber("");
+
                 InitShare(contact);
+
                 //Toast.makeText(getApplicationContext(), "Ready to share?", Toast.LENGTH_LONG).show();
             }
         });
@@ -105,12 +116,7 @@ public class MainActivity extends Activity {
         LinkedHashMap<Integer, Integer> cardsByGroups = new LinkedHashMap<Integer, Integer>();
         cardsByGroups.put(0,0);
 
-        //Intent shareIntent = shCard.SetupShare(cardsByGroups);
-
-        //startActivity(Intent.createChooser(shareIntent, getString(R.string.text_share_card_to)));
         startActivity(shCard.SetupShare(cardsByGroups));
-
-       // return shareIntent;
     }
 
 }

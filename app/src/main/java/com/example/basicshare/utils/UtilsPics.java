@@ -37,7 +37,7 @@ public class UtilsPics  {
 	public static String IMFILENAME = "cardimage";
 	//public static String PPHOTODEFAULT = "ppdefault";
 	public static String MPPHOTO = "mProfilePhoto";
-	public static String JSONFILENAME = "cardinfo";
+	public static String JSONFILENAME = "cardinfo1";
 	
 	public static String filePathJson = android.os.Environment.getExternalStorageDirectory() + FORESLASH + APP_FOLDER + FORESLASH + JSONFILENAME + ".json";
 

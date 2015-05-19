@@ -16,6 +16,52 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="com.example.basicshare.GetCardsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.json" />
+                <data android:host="*" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+
+                <data android:scheme="file"
+                    android:pathPattern=".*\\.json"
+                    android:mimeType="application/*"/>
+                <data android:scheme="content"
+                    android:pathPattern=".*\\.json"
+                    android:mimeType="application/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="http"
+                    android:host="*"
+                    android:pathPattern=".*\\.json" />
+                <data android:scheme="https"
+                    android:host="*"
+                    android:pathPattern=".*\\.json" />
+                <data android:scheme="ftp"
+                    android:host="*"
+                    android:pathPattern=".*\\.json" />
+
+            </intent-filter>
+        </activity>
     </application>
+
+    <!-- Internet Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
 
 </manifest>

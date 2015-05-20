@@ -1,17 +1,14 @@
 package com.example.basicshare;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.ShareActionProvider;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.example.basicshare.utils.Contact;
 import com.example.basicshare.utils.UtilsPics;
@@ -19,58 +16,71 @@ import com.example.basicshare.utils.UtilsPics;
 import java.util.LinkedHashMap;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
 
     private ShareActionProvider mShareActionProvider;
 
-    private ImageView imageView;
-    private TextView textView;
-    private Button shareButton;
-
     private Context mContext;
-
-    private UtilsPics uPics = new UtilsPics();
+    private Uri data;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        Bitmap bm = null;
-        final int imageID = 1;
+        setContentView(R.layout.activity_import_file);
 
         mContext = getApplicationContext();
+        UtilsPics uPics = new UtilsPics(mContext);
 
-        imageView = (ImageView)findViewById(R.id.imageView);
-        textView = (TextView)findViewById(R.id.textView);
-        shareButton = (Button)findViewById(R.id.share_button);
+        String mParentPath = null;
 
-        bm = uPics.decodeSampledBitmapFromRes(getApplicationContext(),uPics.mThumbIds[(int)imageID-1],  70, 70);
-        imageView.setImageBitmap(bm);
-        imageView.setAdjustViewBounds(true);
+        ImportFileFragment firstFragment = new ImportFileFragment();
 
-        //textView.setText("Name");
-        textView.setFocusable(true);
-        textView.setEnabled(true);
-        textView.setClickable(true);
+        Intent intent = getIntent();
 
+        // pass the Intent's extras to the fragment as arguments
+        if (intent.getData() == null) {
+            intent.putExtra("FLAG_IMPORT", false);
+            intent.putExtra("mParentPath", mParentPath);
+            firstFragment.setArguments(intent.getExtras());
 
-        //ImageView ie = ((ImageView)holder.findViewById(R.id.im_expand));
-        shareButton.setOnClickListener(new View.OnClickListener() {
+        }
+        else
+        {
+            data = intent.getData();
+
+            // Get the Intent action
+            String action = intent.getAction();
+
+			/*
+			 * For ACTION_VIEW, the Activity is being asked to display data.
+			 * Get the URI.
+			 */
+
+            if (TextUtils.equals(action, Intent.ACTION_VIEW)) {
+                // Get the URI from the Intent
+            /*
+             * Test for the type of URI, by getting its scheme value
+             */
+                if (TextUtils.equals(data.getScheme(), "file")) {
+                    mParentPath = uPics.handleFileUri(data);
+                } else if (TextUtils.equals(
+                        data.getScheme(), "content")) {
+                    mParentPath = uPics.handleContentUri(data);
+                }
+            }
+
+            intent.putExtra("FLAG_IMPORT", true);
+            intent.putExtra("mParentPath", mParentPath);
+            firstFragment.setArguments(intent.getExtras());
+        }
+        // Add the fragment to the 'fragment_container' FrameLayout
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.frag_container_import, firstFragment, "IMPORT_FILE_FRAGMENT").commit();
+
+        ImportFileFragment.setShareQcardCallback(new ImportFileFragment.ShareQcardCallback() {
             @Override
-            public void onClick(View v) {
-                Contact contact = new Contact();
-                contact.setImageID(imageID);
-                contact.setName(textView.getText().toString());
-                contact.setOwnerID(1);
-                contact.setID(1);
-                contact.setStreet("");
-                contact.setPlace("");
-                contact.setPhoneNumber("");
-
+            public void onShareQcardPressed(Contact contact) {
                 InitShare(contact);
-
-                //Toast.makeText(getApplicationContext(), "Ready to share?", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -111,8 +121,10 @@ public class MainActivity extends Activity {
      * */
     private void InitShare(Contact contact) {
 
-        uPics.createFiles(mContext,contact);
+        UtilsPics uPics = new UtilsPics(mContext);
         ShareCards shCard = new ShareCards(mContext);
+
+        uPics.createFiles(contact);
         LinkedHashMap<Integer, Integer> cardsByGroups = new LinkedHashMap<Integer, Integer>();
         cardsByGroups.put(0,0);
 

@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
@@ -41,11 +43,11 @@ public class UtilsPics  {
 	
 	public static String filePathJson = android.os.Environment.getExternalStorageDirectory() + FORESLASH + APP_FOLDER + FORESLASH + JSONFILENAME + ".json";
 
-    /*private Context mContext;
+    private Context mContext;
     // constructor
     public UtilsPics(Context context) {
         mContext = context;
-    }*/
+    }
 
     // Keep all Images in array (cards layouts stored in the folder res).
     
@@ -99,7 +101,7 @@ public class UtilsPics  {
 	    return inSampleSize;   
    }
 
-    public File FindDir(Context context)
+    public File FindDir()
 	{
 		File FileDir;
 	    //Find the dir to save images
@@ -107,20 +109,19 @@ public class UtilsPics  {
 	    	FileDir = new File(android.os.Environment.getExternalStorageDirectory(),APP_FOLDER);
 	    else
 	    	//FileDir = context.getCacheDir();
-	    	FileDir = context.getFilesDir();
+	    	FileDir = mContext.getFilesDir();
 	    if(!FileDir.exists())
 	    	FileDir.mkdirs();
 	    
 	    return FileDir;
 	}
 
-    public void createFiles(Context mContext, Contact contact)
+    public void createFiles(Contact contact)
     {
 
-        UtilsPics im = new UtilsPics();
         int imageID = contact.getImageID();
 
-        Bitmap bm = im.decodeSampledBitmapFromRes(mContext,im.mThumbIds[(int)imageID-1],  70, 70);
+        Bitmap bm = decodeSampledBitmapFromRes(mContext,mThumbIds[(int)imageID-1],  70, 70);
 
         List<Contact> contactListToShare;
 
@@ -129,20 +130,61 @@ public class UtilsPics  {
 
         String cardData;
 
-        File folder_dir = im.FindDir(mContext);
+        File folder_dir = FindDir();
         String im_filename = UtilsPics.IMFILENAME + "00";
         String json_filename = UtilsPics.JSONFILENAME;
 
         // Copy image to memory
-        im.saveImageToInternalStorage(mContext, bm, folder_dir, im_filename);
+        saveImageToInternalStorage(bm, folder_dir, im_filename);
 
         cardData = UtilsJson.ContactsToJSon(contactListToShare);
 
         // Copy json to memory
-        im.saveFileToInternalStorage(mContext, cardData, folder_dir, json_filename);
+        saveFileToInternalStorage(cardData, folder_dir, json_filename);
     }
 
-    public void saveImageToInternalStorage(Context mContext, Bitmap bitmapImage, File FolderDir, String filename){
+    public Contact ImportCards(Uri data, String filePath)
+    {
+        Contact contact = new Contact();
+        InputStream inputStream = null;
+
+        if (filePath == null){
+            try
+            {
+                ContentResolver cr = mContext.getContentResolver();
+                inputStream = cr.openInputStream(data);
+            }
+            catch (FileNotFoundException e)
+            {
+                Log.e("TAG", "File not found: " + e.toString());
+            }
+        }
+
+        String str = readFileFromInternalStorage(filePath, inputStream);
+        boolean shareGroup = UtilsJson.checkShareGroupsOrCards(str);
+
+        LinkedHashMap<String, List<Contact>> listGroupsImport = new LinkedHashMap<String, List<Contact>>();
+        List<Contact> listCardsImport = new ArrayList<Contact>();
+
+        if (shareGroup){
+
+            Log.e("TAG", "Only implemented on Qcards");
+        }
+        else
+        {
+            Log.e("TAG", str);
+            listCardsImport = UtilsJson.JSonToContacts(str);
+
+            for (int nc = 0; nc < listCardsImport.size(); nc++)
+            {
+                contact = listCardsImport.get(nc);
+            }
+        }
+        return contact;
+    }
+
+
+    public void saveImageToInternalStorage(Bitmap bitmapImage, File FolderDir, String filename){
 	   String fn = filename + ".jpg";
        File mypath = new File(FolderDir,fn);
 
@@ -158,7 +200,7 @@ public class UtilsPics  {
            e.printStackTrace();
        }
    }
-   public void saveFileToInternalStorage(Context context, String data, File FolderDir, String filename){
+   public void saveFileToInternalStorage(String data, File FolderDir, String filename){
 	   String fn = filename + ".json";
        File mypath = new File(FolderDir,fn);
 
@@ -178,7 +220,7 @@ public class UtilsPics  {
         
     }
     
-    public Bitmap combineImages(Bitmap background, Bitmap foreground, Context mContext) { 
+    public Bitmap combineImages(Bitmap background, Bitmap foreground) {
     //public Bitmap combineImages(Bitmap c, Bitmap s, Context mContext) {
 
         int width = 0, height = 0;
@@ -201,8 +243,8 @@ public class UtilsPics  {
     }
     
     
-    //public String readFileFromInternalStorage(String fileName, Context context)
-    public String readFileFromInternalStorage(String filePath, Context context, InputStream einputStream)
+    //public String readFileFromInternalStorage(String fileName)
+    public String readFileFromInternalStorage(String filePath, InputStream einputStream)
     {
             String stringToReturn = " ";
             FileInputStream inputStream;
@@ -248,7 +290,7 @@ public class UtilsPics  {
         return fileName;
     }
     
-    public String handleContentUri(Uri beamUri, Context context) {
+    public String handleContentUri(Uri beamUri) {
 
         int filenameIndex;
         String fileName = null;
@@ -258,7 +300,7 @@ public class UtilsPics  {
             
             // Handle content URIs for other content providers
         	String[] proj = { MediaStore.Images.Media.DATA };
-    	    CursorLoader loader = new CursorLoader(context, beamUri, proj, null, null, null);
+    	    CursorLoader loader = new CursorLoader(mContext, beamUri, proj, null, null, null);
     	    Cursor cursor = loader.loadInBackground();
     	    filenameIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
     	    cursor.moveToFirst();
@@ -269,7 +311,7 @@ public class UtilsPics  {
             // Get the column that contains the file name
             String[] projection = { MediaStore.MediaColumns.DATA };
             Cursor pathCursor =
-            		context.getContentResolver().query(beamUri, projection,
+            		mContext.getContentResolver().query(beamUri, projection,
                     null, null, null);
             // Check for a valid cursor
             if (pathCursor != null &&

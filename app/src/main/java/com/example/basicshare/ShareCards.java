@@ -1,3 +1,4 @@
+
 package com.example.basicshare;
 
 import java.io.File;
@@ -35,16 +36,10 @@ public class ShareCards {
     public Intent SetupShare(LinkedHashMap<Integer, Integer> cardsByGroups){
    	
     	Uri orgUri;
-    	UtilsPics im = new UtilsPics();
+    	UtilsPics im = new UtilsPics(mContext);
     	ArrayList<Uri> fileUris = new ArrayList<Uri>();
     	
-    	/*Intent shareIntent = new Intent();
-    	shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
-    	*/
-    	//shareIntent.setType("*/*");
-    	//shareIntent.setType("application/json");
-
-    	int nc;
+	   	int nc;
     	int ng = 0;
     	String s1;
     	String s2;
@@ -137,10 +132,10 @@ public class ShareCards {
 	public LinkedHashMap<Integer, Integer> ShareGroups(LinkedHashMap<String, List<Contact>> groupListToShare) {
 		
     	int indexGroup = 0;
-    	UtilsPics im = new UtilsPics();
+    	UtilsPics im = new UtilsPics(mContext);
     	List<Contact> contactListToShare = new ArrayList<Contact>();
     	
-		File FolderDir = im.FindDir(mContext);
+		File FolderDir = im.FindDir();
 		LinkedHashMap<Integer, Integer> cardsByGroups = new LinkedHashMap<Integer, Integer>();
 		LinkedHashMap<Integer, Integer> cbgTemp = new LinkedHashMap<Integer, Integer>();
 		
@@ -155,7 +150,7 @@ public class ShareCards {
         } 
 		
 		String groupsData = UtilsJson.GroupsToJSon(groupListToShare);
-		im.saveFileToInternalStorage(mContext,groupsData,FolderDir ,UtilsPics.JSONFILENAME);
+		im.saveFileToInternalStorage(groupsData,FolderDir ,UtilsPics.JSONFILENAME);
 		
 		return cardsByGroups;
 	}
@@ -172,11 +167,11 @@ public class ShareCards {
     	int indexCards;
     	int imageID;
     	Bitmap bm;
-    	UtilsPics im = new UtilsPics();
+    	UtilsPics im = new UtilsPics(mContext);
     	Contact contact = new Contact();
     	
     	
-		File FolderDir = im.FindDir(mContext);
+		File FolderDir = im.FindDir();
 		subix1 = new Integer(indexGroup).toString();    	
             	
         for (indexCards = 0; indexCards < contactListToShare.size(); indexCards++)
@@ -191,14 +186,14 @@ public class ShareCards {
 			// Copy file to memory 
 			
 			String filename = UtilsPics.IMFILENAME + subix1 + subix2;
-			im.saveImageToInternalStorage(mContext,bm,FolderDir, filename);
+			im.saveImageToInternalStorage(bm,FolderDir, filename);
         }
         cardsByGroups.put(indexGroup,indexCards-1);
 
 		
 		String cardData = UtilsJson.ContactsToJSon(contactListToShare);
 		// Create JSON file and Copy it to memory
-		im.saveFileToInternalStorage(mContext,cardData,FolderDir ,UtilsPics.JSONFILENAME);
+		im.saveFileToInternalStorage(cardData,FolderDir ,UtilsPics.JSONFILENAME);
 
 		return cardsByGroups;
 	}

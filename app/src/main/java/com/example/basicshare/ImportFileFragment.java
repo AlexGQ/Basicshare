@@ -42,9 +42,14 @@ public class ImportFileFragment extends Fragment{
 	private RelativeLayout ll;
 	private Uri data;
 
+	private static ShareQcardCallback ShareQcardCallback;
+
 	private Contact contact = new Contact();
-	
-	private UtilsPics uPics = new UtilsPics();
+	private int imageID = 1;
+
+	public interface ShareQcardCallback {
+		void onShareQcardPressed(Contact contact);
+	}
 
 public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     	
@@ -52,107 +57,72 @@ public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle sa
      	ll = (RelativeLayout) inflater.inflate(R.layout.activity_main, container, false);
 
      	mContext = getActivity().getApplicationContext();
-     	
-     	String mParentPath = null;
+
+		UtilsPics uPics = new UtilsPics(mContext);
+
+		String mParentPath = null;
 		Bitmap bm = null;
-
-     // Get the intent that started this activity
-	    Intent intent = fa.getIntent();
-	    
-        data = intent.getData();
-
-        // Get the Intent action
-        String action = intent.getAction();
-
-        /*
-         * For ACTION_VIEW, the Activity is being asked to display data.
-         * Get the URI.
-         */
-        if (TextUtils.equals(action, Intent.ACTION_VIEW)) {
-            // Get the URI from the Intent
-            /*
-             * Test for the type of URI, by getting its scheme value
-             */
-            if (TextUtils.equals(data.getScheme(), "file")) {
-                mParentPath = uPics.handleFileUri(data);
-            } else if (TextUtils.equals(
-            		data.getScheme(), "content")) {
-                mParentPath = uPics.handleContentUri(data, mContext);
-            }
-        }
-
-    	ImportCards(mParentPath);
+		String name;
 
 		imageView = (ImageView)ll.findViewById(R.id.imageView);
 		textView = (TextView)ll.findViewById(R.id.textView);
 		shareButton = (Button)ll.findViewById(R.id.share_button);
 
-		int imageID = contact.getImageID();
-		String name = contact.getName();
+		textView.setFocusable(true);
+		textView.setEnabled(true);
+		textView.setClickable(true);
 
+		// Get the extras
+		Intent intent = fa.getIntent();
+		Bundle extras = intent.getExtras();
+		Boolean FLAG_IMPORT = extras.getBoolean("FLAG_IMPORT");
 
+		// If there is a file to import
+		if (FLAG_IMPORT) {
 
-		bm = uPics.decodeSampledBitmapFromRes(fa.getApplicationContext(),uPics.mThumbIds[(int)imageID-1],  70, 70);
+			data = intent.getData();
+			mParentPath = extras.getString("mParentPath");
+
+			contact = uPics.ImportCards(data, mParentPath);
+			imageID = contact.getImageID();
+			name = contact.getName();
+
+			textView.setText(name);
+
+		} else
+		{
+
+			//ImageView ie = ((ImageView)holder.findViewById(R.id.im_expand));
+			shareButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+
+					contact.setImageID(imageID);
+					contact.setName(textView.getText().toString());
+					contact.setOwnerID(1);
+					contact.setID(1);
+					contact.setStreet("");
+					contact.setPlace("");
+					contact.setPhoneNumber("");
+
+					ShareQcardCallback.onShareQcardPressed(contact);
+
+					//InitShare(contact);
+					//Toast.makeText(getApplicationContext(), "Ready to share?", Toast.LENGTH_LONG).show();
+				}
+			});
+
+		}
+
+		bm = uPics.decodeSampledBitmapFromRes(fa.getApplicationContext(), uPics.mThumbIds[(int) imageID-1],  70, 70);
 		imageView.setImageBitmap(bm);
 		imageView.setAdjustViewBounds(true);
 
-		textView.setText(name);
-            
      	return ll;
 	}
 
-public void ImportCards(String filePath)
-{
-	int group_id;	
-   	int contactId;
-   	int[] contacts_ids;
-
-   	InputStream inputStream = null;
-
-   	if (filePath == null){
-   		try 
-        {
-   			ContentResolver cr = mContext.getContentResolver();
-   			inputStream = cr.openInputStream(data);
-        }
-        catch (FileNotFoundException e) 
-        {
-                Log.e("TAG", "File not found: " + e.toString());
-        }
-    }
-	String str = uPics.readFileFromInternalStorage(filePath, mContext, inputStream);
-	boolean shareGroup = UtilsJson.checkShareGroupsOrCards(str);
-	
-	LinkedHashMap<String, List<Contact>> listGroupsImport = new LinkedHashMap<String, List<Contact>>();
-	List<Contact> listCardsImport = new ArrayList<Contact>();
-
-	
-	if (shareGroup){
-
-		Log.e("TAG", "Only implemented on Qcards");
-
+	public static void setShareQcardCallback(ShareQcardCallback callback) {
+		ShareQcardCallback = callback;
 	}
-	else
-	{
-		Log.e("TAG", str);
-		listCardsImport = UtilsJson.JSonToContacts(str);
-		
-    	for (int nc = 0; nc < listCardsImport.size(); nc++)
-    	{
-    		contact = listCardsImport.get(nc);
-    	}
-	}
-}
-
-public ParcelFileDescriptor openFile(Uri uri, String mode)
-        throws FileNotFoundException {
-    File f = new File(mContext.getFilesDir(), uri.getPath());
-    
-    if (f.exists()) {
-        return (ParcelFileDescriptor.open(f, ParcelFileDescriptor.MODE_READ_ONLY));
-    }
-
-    throw new FileNotFoundException(uri.getPath());
-}
 
 }

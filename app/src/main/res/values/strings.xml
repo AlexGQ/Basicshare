@@ -1,7 +1,23 @@
 <resources>
     <string name="app_name">Basicshare</string>
+    <string name="app_id">1638392053061348</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="text_share_card_to">Share card(s) to..</string>
+
+    <string name="share_on_facebook">Share on Facebook</string>
+    <string name="send_with_messenger">Send with Messenger</string>
+    <string name="invite_friends">Invite Friends</string>
+
+    <string name="error_ok_button">OK</string>
+    <string name="native_share_error">Native sharing requires the Facebook for Android
+        application.</string>
+    <string name="error_dialog_title">Error!</string>
+
+    <string name="share_with_friends_title">Share on Facebook</string>
+    <string name="share_with_friends_message">Share game activity with friends?</string>
+    <string name="share_with_friends_yes">Yes</string>
+    <string name="share_with_friends_no">Maybe Later</string>
+
 </resources>

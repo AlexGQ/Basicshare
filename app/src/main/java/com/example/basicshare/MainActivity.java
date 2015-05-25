@@ -12,6 +12,9 @@ import android.view.MenuItem;
 
 import com.example.basicshare.utils.Contact;
 import com.example.basicshare.utils.UtilsPics;
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.FacebookSdk;
 
 import java.util.LinkedHashMap;
 
@@ -22,6 +25,16 @@ public class MainActivity extends FragmentActivity {
 
     private Context mContext;
     private Uri data;
+
+    private MenuItem share;
+    private MenuItem message;
+    private MenuItem invite;
+
+    private boolean isResumed = false;
+
+    private AccessTokenTracker accessTokenTracker;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +86,24 @@ public class MainActivity extends FragmentActivity {
             intent.putExtra("mParentPath", mParentPath);
             firstFragment.setArguments(intent.getExtras());
         }
+
+        FacebookSdk.sdkInitialize(this.getApplicationContext());
+
+        accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken,
+                                                       AccessToken currentAccessToken) {
+                if (isResumed) {
+                    if (currentAccessToken == null) {
+
+                        ImportFileFragment firstFragment = new ImportFileFragment();
+                        // Add the fragment to the 'fragment_container' FrameLayout
+                        getSupportFragmentManager().beginTransaction()
+                                .add(R.id.frag_container_import, firstFragment, "IMPORT_FILE_FRAGMENT").commit();
+                    }
+                }
+            }
+        };
         // Add the fragment to the 'fragment_container' FrameLayout
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.frag_container_import, firstFragment, "IMPORT_FILE_FRAGMENT").commit();
@@ -92,6 +123,7 @@ public class MainActivity extends FragmentActivity {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

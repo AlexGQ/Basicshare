@@ -36,11 +36,21 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Share FACE"
+        android:text="Share FACEBOOK"
         android:id="@+id/share_face_button"
         android:layout_alignParentBottom="true"
-        android:layout_alignRight="@+id/imageView"
-        android:layout_alignEnd="@+id/imageView" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Share linkedin"
+        android:id="@+id/share_linkedin_button"
+        android:layout_marginTop="24dp"
+        android:layout_below="@+id/textView"
+        android:layout_alignLeft="@+id/textView"
+        android:layout_alignStart="@+id/textView" />
 
 
 </RelativeLayout>

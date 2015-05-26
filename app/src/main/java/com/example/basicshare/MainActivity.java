@@ -9,12 +9,15 @@ import android.support.v7.widget.ShareActionProvider;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.basicshare.utils.Contact;
 import com.example.basicshare.utils.UtilsPics;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.FacebookSdk;
+import com.linkedin.platform.LISessionManager;
+
 
 import java.util.LinkedHashMap;
 
@@ -104,6 +107,8 @@ public class MainActivity extends FragmentActivity {
                 }
             }
         };
+
+
         // Add the fragment to the 'fragment_container' FrameLayout
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.frag_container_import, firstFragment, "IMPORT_FILE_FRAGMENT").commit();
@@ -147,6 +152,14 @@ public class MainActivity extends FragmentActivity {
             mShareActionProvider.setShareIntent(shareIntent);
         }
     }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+            LISessionManager.getInstance(getApplicationContext()).onActivityResult(this, requestCode, resultCode, data);
+
+    }
+
 
     /**
      * Launching activity to share card

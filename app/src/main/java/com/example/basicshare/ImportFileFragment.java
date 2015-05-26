@@ -1,6 +1,5 @@
 package com.example.basicshare;
 
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.facebook.login.DefaultAudience;
@@ -38,8 +38,22 @@ import com.facebook.login.LoginResult;
 import com.facebook.share.ShareApi;
 import com.facebook.share.Sharer;
 import com.facebook.share.widget.AppInviteDialog;
+
 import com.facebook.share.widget.MessageDialog;
 import com.facebook.share.widget.ShareDialog;
+import com.linkedin.platform.APIHelper;
+import com.linkedin.platform.LISession;
+import com.linkedin.platform.LISessionManager;
+import com.linkedin.platform.errors.LIApiError;
+import com.linkedin.platform.errors.LIAuthError;
+import com.linkedin.platform.listeners.ApiListener;
+import com.linkedin.platform.listeners.ApiResponse;
+import com.linkedin.platform.listeners.AuthListener;
+import com.linkedin.platform.utils.Scope;
+import com.linkedin.platform.listeners.ApiListener;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 
@@ -49,6 +63,7 @@ public class ImportFileFragment extends Fragment{
 	private TextView textView;
 	private Button shareButton;
 	private Button shareFaceButton;
+	private Button shareLinkedInButton;
 
 	private Context mContext;
 	private FragmentActivity fa;
@@ -159,7 +174,14 @@ public class ImportFileFragment extends Fragment{
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 			callbackManager.onActivityResult(requestCode, resultCode, data);
+			//LISessionManager.getInstance(mContext).onActivityResult(fa, requestCode, resultCode, data);
+
 			}
+
+	private static Scope buildScope() {
+		return Scope.build(Scope.R_BASICPROFILE, Scope.W_SHARE, Scope.R_EMAILADDRESS);
+	}
+
 
 
 	private void publishResult() {
@@ -257,12 +279,79 @@ public class ImportFileFragment extends Fragment{
 
 	}
 
+	public void shareUsingLinkedIn() {
+		String url = "https://api.linkedin.com/v1/people/~/shares";
+		//String url = "https://api.linkedin.com/v1/people/~/shares?format=json";
+		/*JSONObject body = null;
+		try {
+			body = new JSONObject("{" +
+				"\"comment\": \"Sample share\"," +
+				"\"visibility\": { \"code\": \"anyone\" }," +
+				"\"content\": { " +
+				"\"title\": \"Sample share\"," +
+				"\"description\": \"Testing the mobile SDK call wrapper!\"," +
+				"\"submitted-url\": \"http://www.example.com/\"," +
+				"\"submitted-image-url\": \"http://www.example.com/pic.jpg\"" +
+				"}" +
+				"}");
+		} catch (JSONException e) {
+			Toast.makeText(getActivity(), "Exception JSON", Toast.LENGTH_SHORT).show();
+		}*/
+		String body = "{" +
+				"\"comment\":\"Check out developer.linkedin.com! " +
+				"http://linkd.in/1FC2PyG\"," +
+				"\"visibility\":{" +
+				"    \"code\":\"anyone\"}" +
+				"}";
+
+
+		if(isAccessTokenValid())
+			{
+				//APIHelper apiHelper = APIHelper.getInstance(mContext);
+				APIHelper apiHelper = APIHelper.getInstance(getActivity().getApplicationContext());
+
+				apiHelper.postRequest(getActivity(), url, body, new ApiListener() {
+					@Override
+					public void onApiSuccess(ApiResponse apiResponse) {
+						Toast.makeText(getActivity(), "Success making POST request!", Toast.LENGTH_SHORT).show();
+
+					}
+
+					@Override
+					public void onApiError(LIApiError liApiError) {
+						Toast.makeText(getActivity(), liApiError.toString(), Toast.LENGTH_SHORT).show();
+						// Error making POST request!
+					}
+				});
+
+
+			}
+		else {
+			Toast.makeText(getActivity(), "Error Accesstoken", Toast.LENGTH_SHORT).show();
+		}
+		}
+
 	private ShareLinkContent getLinkContent() {
 		return new ShareLinkContent.Builder()
 				.setContentTitle(SHARE_APP_NAME)
 				.setContentUrl(Uri.parse(SHARE_APP_LINK))
 				.build();
 	}
+
+
+	/*@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		shareUsingLinkedIn();
+
+	}
+*/
+	/*@Override
+	public void onResume() {
+		super.onResume();
+		shareUsingLinkedIn();
+
+	}*/
 
 	private void showError(int messageId) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -290,6 +379,7 @@ public class ImportFileFragment extends Fragment{
 		textView = (TextView)ll.findViewById(R.id.textView);
 		shareButton = (Button)ll.findViewById(R.id.share_button);
 		shareFaceButton = (Button)ll.findViewById(R.id.share_face_button);
+		shareLinkedInButton = (Button)ll.findViewById(R.id.share_linkedin_button);
 
 		textView.setFocusable(true);
 		textView.setEnabled(true);
@@ -346,6 +436,37 @@ public class ImportFileFragment extends Fragment{
 				}
 			});
 
+
+			shareLinkedInButton.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+
+					//Toast.makeText(getActivity(), "Success!", Toast.LENGTH_SHORT).show();
+					if (isAccessTokenValid()) {
+						shareUsingLinkedIn();
+						Toast.makeText(getActivity(), "Success!", Toast.LENGTH_SHORT).show();
+					} else {
+						LISessionManager.getInstance(mContext).init(getActivity(), buildScope(), new AuthListener() {
+							@Override
+							public void onAuthSuccess() {
+
+								Toast.makeText(getActivity(), "Success log in!", Toast.LENGTH_SHORT).show();
+								shareUsingLinkedIn();
+							}
+
+							@Override
+							public void onAuthError(LIAuthError error) {
+								Toast.makeText(getActivity(), "Error log in!", Toast.LENGTH_SHORT).show();
+
+							}
+						}, true);
+				}
+
+				}
+			});
+
+
+
 		}
 
 		bm = uPics.decodeSampledBitmapFromRes(fa.getApplicationContext(), uPics.mThumbIds[(int) imageID-1],  70, 70);
@@ -353,6 +474,14 @@ public class ImportFileFragment extends Fragment{
 		imageView.setAdjustViewBounds(true);
 
      	return ll;
+	}
+
+	private boolean isAccessTokenValid() {
+		boolean accessTokenValid;
+		LISessionManager sessionManager = LISessionManager.getInstance(fa.getApplicationContext());
+		LISession session = sessionManager.getSession();
+		accessTokenValid = session.isValid();
+		return accessTokenValid;
 	}
 
 	public static void setShareQcardCallback(ShareQcardCallback callback) {

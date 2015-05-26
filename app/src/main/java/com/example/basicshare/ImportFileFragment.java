@@ -244,6 +244,19 @@ public class ImportFileFragment extends Fragment{
 		}
 	}
 
+	public void shareUsingMessengerDialog() {
+
+			ShareContent content = getLinkContent();
+
+			// share the app
+			if (messageDialog.canShow(content)) {
+				messageDialog.show(content);
+			} else {
+				showError(R.string.native_share_error);
+			}
+
+	}
+
 	private ShareLinkContent getLinkContent() {
 		return new ShareLinkContent.Builder()
 				.setContentTitle(SHARE_APP_NAME)

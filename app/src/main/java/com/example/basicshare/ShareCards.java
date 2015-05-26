@@ -105,10 +105,12 @@ public class ShareCards {
 					intent.setComponent(new ComponentName(packageName, resInfo.activityInfo.name));
 					intent.setAction(Intent.ACTION_SEND_MULTIPLE);
 					//intent.setAction(Intent.ACTION_SEND);
-					intent.setType("*/*");
+					//intent.setType("*/*");
+					intent.setType("text/plain");
 					intent.putExtra(Intent.EXTRA_SUBJECT, "My business card");
-					intent.putExtra(Intent.EXTRA_TEXT, "This is my text to send.");
-					intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, fileUris);
+					intent.putExtra(Intent.EXTRA_TEXT, "This is my text to send. www.google.com");
+
+					//intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, fileUris);
 					intent.setPackage(packageName);
 					targetShareIntents.add(intent);
 				}

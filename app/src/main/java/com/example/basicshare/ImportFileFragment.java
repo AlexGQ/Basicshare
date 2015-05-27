@@ -14,22 +14,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.basicshare.utils.Contact;
 import com.example.basicshare.utils.UtilsPics;
-import com.linkedin.platform.APIHelper;
-import com.linkedin.platform.DeepLinkHelper;
-import com.linkedin.platform.LISession;
-import com.linkedin.platform.LISessionManager;
-import com.linkedin.platform.errors.LIApiError;
-import com.linkedin.platform.errors.LIAuthError;
-import com.linkedin.platform.errors.LIDeepLinkError;
-import com.linkedin.platform.listeners.ApiListener;
-import com.linkedin.platform.listeners.ApiResponse;
-import com.linkedin.platform.listeners.AuthListener;
-import com.linkedin.platform.listeners.DeepLinkListener;
-import com.linkedin.platform.utils.Scope;
+
 
 public class ImportFileFragment extends Fragment{
 
@@ -45,6 +33,7 @@ public class ImportFileFragment extends Fragment{
 	private Uri data;
 
 	private HelperFacebook mFacebookAuth;
+	private HelperLinkedIn mLinkedInAuth;
 
 	private static ShareQcardCallback ShareQcardCallback;
 
@@ -60,6 +49,8 @@ public class ImportFileFragment extends Fragment{
 		super.onCreate(savedInstanceState);
 
 		mFacebookAuth = new HelperFacebook(getActivity(), this);
+		mLinkedInAuth = new HelperLinkedIn(getActivity().getApplicationContext(),this);
+
 		mFacebookAuth.checkPublishActions();
 
 	}
@@ -68,76 +59,6 @@ public class ImportFileFragment extends Fragment{
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		mFacebookAuth.onActivityResult(requestCode, resultCode, data);
 	}
-
-	private static Scope buildScope() {
-		return Scope.build(Scope.R_BASICPROFILE, Scope.W_SHARE, Scope.R_EMAILADDRESS);
-	}
-
-
-
-	public void shareUsingLinkedIn() {
-		String url = "https://api.linkedin.com/v1/people/~/shares";
-		//String url = "https://api.linkedin.com/v1/people/~/shares?format=json";
-		/*JSONObject body = null;
-		try {
-			body = new JSONObject("{" +
-				"\"comment\": \"Sample share\"," +
-				"\"visibility\": { \"code\": \"anyone\" }," +
-				"\"content\": { " +
-				"\"title\": \"Sample share\"," +
-				"\"description\": \"Testing the mobile SDK call wrapper!\"," +
-				"\"submitted-url\": \"http://www.example.com/\"," +
-				"\"submitted-image-url\": \"http://www.example.com/pic.jpg\"" +
-				"}" +
-				"}");
-		} catch (JSONException e) {
-			Toast.makeText(getActivity(), "Exception JSON", Toast.LENGTH_SHORT).show();
-		}*/
-		String body = "{" +
-				"\"comment\":\"Check out developer.linkedin.com! " +
-				"http://www.google.com\"," +
-				"\"visibility\":{" +
-				"    \"code\":\"anyone\"}" +
-				"}";
-
-
-		if(isAccessTokenValid())
-			{
-				//APIHelper apiHelper = APIHelper.getInstance(mContext);
-				APIHelper apiHelper = APIHelper.getInstance(getActivity().getApplicationContext());
-
-				apiHelper.postRequest(getActivity(), url, body, new ApiListener() {
-					@Override
-					public void onApiSuccess(ApiResponse apiResponse) {
-						Toast.makeText(getActivity(), "Success making POST request!", Toast.LENGTH_SHORT).show();
-						DeepLinkHelper.getInstance().openCurrentProfile(getActivity(), new DeepLinkListener() {
-							@Override
-							public void onDeepLinkSuccess() {
-
-							}
-
-							@Override
-							public void onDeepLinkError(LIDeepLinkError error) {
-
-							}
-						});
-
-					}
-
-					@Override
-					public void onApiError(LIApiError liApiError) {
-						Toast.makeText(getActivity(), liApiError.toString(), Toast.LENGTH_SHORT).show();
-						// Error making POST request!
-					}
-				});
-
-
-			}
-		else {
-			Toast.makeText(getActivity(), "Error Accesstoken", Toast.LENGTH_SHORT).show();
-		}
-		}
-
 
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
     	
@@ -218,26 +139,7 @@ public class ImportFileFragment extends Fragment{
 				@Override
 				public void onClick(View view) {
 
-					//Toast.makeText(getActivity(), "Success!", Toast.LENGTH_SHORT).show();
-					if (isAccessTokenValid()) {
-						shareUsingLinkedIn();
-						Toast.makeText(getActivity(), "Success!", Toast.LENGTH_SHORT).show();
-					} else {
-						LISessionManager.getInstance(mContext).init(getActivity(), buildScope(), new AuthListener() {
-							@Override
-							public void onAuthSuccess() {
-
-								Toast.makeText(getActivity(), "Success log in!", Toast.LENGTH_SHORT).show();
-								shareUsingLinkedIn();
-							}
-
-							@Override
-							public void onAuthError(LIAuthError error) {
-								Toast.makeText(getActivity(), "Error log in!", Toast.LENGTH_SHORT).show();
-
-							}
-						}, true);
-				}
+					mLinkedInAuth.shareUsingLinkedIn();
 
 				}
 			});
@@ -251,14 +153,6 @@ public class ImportFileFragment extends Fragment{
 		imageView.setAdjustViewBounds(true);
 
      	return ll;
-	}
-
-	private boolean isAccessTokenValid() {
-		boolean accessTokenValid;
-		LISessionManager sessionManager = LISessionManager.getInstance(fa.getApplicationContext());
-		LISession session = sessionManager.getSession();
-		accessTokenValid = session.isValid();
-		return accessTokenValid;
 	}
 
 	public static void setShareQcardCallback(ShareQcardCallback callback) {
